@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+
+  mysql-db:
+    image: mysql
+    container_name: mysql-db
+    restart: always
+    tty: true
+    # volumes:
+    #   - ./db/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=docker-compose-challenge
+      - MYSQL_ROOT_PASSWORD=root
+    # ports:
+    #   - 3306:3306
+    networks:
+      - public-subnet
+
+  webserver:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: jhonatanrs/webserver-docker-compose-challenge-full-cyle
+    container_name: webserver
+    environment:
+      - DB_HOST=mysql-db
+    networks:
+      - public-subnet
+    depends_on:
+      - mysql-db
+
+  reverse-proxy:
+    image: nginx
+    container_name: reverse-proxy
+    ports:
+      - 8080:80
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf:ro 
+    command: ["nginx", "-g", "daemon off;"]
+    networks:
+      - public-subnet
+    depends_on:
+      - webserver
+  
+networks:
+  public-subnet:
+    driver: bridge
